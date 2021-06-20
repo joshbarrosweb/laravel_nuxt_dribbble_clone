@@ -10,6 +10,8 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 
 use App\Http\Controllers\User\MeController;
 use App\Http\Controllers\User\SettingsController;
+use App\Http\Controllers\Designs\UploadController;
+use App\Http\Controllers\Designs\DesignController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,9 +31,9 @@ Route::group(['middleware' => ['auth:api']], function () {
 	Route::put('settings/profile', [SettingsController::class, 'updateProfile']);
 	Route::put('settings/password', [SettingsController::class, 'updatePassword']);
 	
-	//Route::get('/user', function (Request $request) {
-    //	return $request->user();
-	//});
+	Route::post('designs', [UploadController::class, 'upload']);
+	Route::put('designs/{id}', [DesignController::class, 'update']);
+	Route::delete('designs/{id}', [DesignController::class, 'destroy']);
 });
 
 Route::group(['middleware' => ['guest:api']], function () {
