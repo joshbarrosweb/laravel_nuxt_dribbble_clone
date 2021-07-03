@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\CommentResource;
 
 class DesignResource extends JsonResource
 {
@@ -21,6 +22,7 @@ class DesignResource extends JsonResource
             'slug' => $this->slug,
             'images' => $this->images,
             'is_live' => $this->is_live,
+            'likes_count' => $this->likes()->count(),
             'description' => $this->description,
             'tag_list' => [
                 'tags' => $this->tagArray,
@@ -34,6 +36,9 @@ class DesignResource extends JsonResource
                 'updated_at_human' => $this->updated_at->diffForHumans(),
                 'updated_at' => $this->updated_at
             ],
+            'comments' => CommentResource::collection(
+                $this->whenLoaded('comments')),
+            'user' => new UserResource($this->whenLoaded('user'))
         ];
     }
 }

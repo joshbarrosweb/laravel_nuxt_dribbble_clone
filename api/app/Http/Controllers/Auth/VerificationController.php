@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Verified;
+use App\Repositories\Contracts\IUser;
 
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -18,11 +19,12 @@ class VerificationController extends Controller
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(IUser $users)
     {
         //$this->middleware('auth');
         $this->middleware('signed')->only('verify');
         $this->middleware('throttle:6,1')->only('verify', 'resend');
+        $this->users = $users;
     }
 
     public function verify(Request $request, User $user)
@@ -51,7 +53,8 @@ class VerificationController extends Controller
             'email' => ['email', 'required']
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = $this->users->findWhereFirst('email', $request->email);
+        
         if (!$user) {
             return response()->json(["errors" => [
                 "email" => "No user could be found with this email address"
