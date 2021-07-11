@@ -48,6 +48,15 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'remember_token',
     ];
 
+    protected $appends=[
+        'photo_url'
+    ];
+
+    public function getPhotoUrlAttribute()
+    {
+        return 'https://www.gravatar.com/avatar/'.md5(strtolower($this->email)).'jpg?s=200&d=mm';
+    }
+
     /**
      * The attributes that should be cast to native types.
      *
@@ -65,6 +74,51 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class)
+                ->withTimestamps();
+    }
+
+    public function ownedTeams()
+    {
+        return $this->teams()
+                ->where('owner_id', $this->id);
+    }
+
+    public function isOwnerOfTeam($team)
+    {
+        return (bool)$this->teams()
+                ->where('id', $team->id)
+                ->where('owner_id', $this->id)
+                ->count();
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(Invitation::class, 'recipient_email', 'email');
+    }
+
+    public function chats()
+    {
+        return $this->belongsToMany(Chat::class, 'participants');
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    public function getChatWithUser($user_id)
+    {
+        $chat = $this->chats()
+                    ->whereHas('participants', function($query) use ($user_id){
+                        $query->where('user_id', $user_id);
+                    })
+                    ->first();
+        return $chat;
     }
 
     public function sendEmailVerificationNotification()

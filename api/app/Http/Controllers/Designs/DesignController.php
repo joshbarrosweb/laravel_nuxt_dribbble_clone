@@ -50,10 +50,12 @@ class DesignController extends Controller
     	$this->validate($request, [
     		'title' => ['required', 'unique:designs,title,'. $id],
     		'description' => ['required', 'string', 'min:20', 'max:140'],
-    		'tags' => ['required']
+    		'tags' => ['required'],
+            'team' => ['required_if:assign_to_team,true']
     	]);
 
     	$design = $this->designs->update($id, [
+            'team_id' => $request->team,
     		'title' => $request->title,
     		'description' => $request->description,
     		'slug' => Str::slug($request->title),
@@ -92,6 +94,33 @@ class DesignController extends Controller
     {
         $isLiked = $this->designs->isLikedByUser($designId);
         return response()->json(['liked' => $isLiked], 200);
+    }
+
+    public function search(Request $request)
+    {
+        $designs = $this->designs->search($request);
+        return DesignResource::collection($designs);
+    }
+
+    public function findBySlug($slug)
+    {
+        $design = $this->designs->withCriteria([new IsLive()])->findWhereFirst('slug', $slug);
+
+        return new DesignResource($design);
+    }
+
+    public function getForTeam($teamId)
+    {
+        $designs = $this->designs->withCriteria([new IsLive()])->findWhere('team_id', $teamId);
+
+        return DesignResource::collection($designs);
+    }
+
+    public function getForUser($userId)
+    {
+        $designs = $this->designs->withCriteria([new IsLive()])->findWhere('user_id', $userId);
+
+        return DesignResource::collection($designs);
     }
 
 }
